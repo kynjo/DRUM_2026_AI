@@ -21,7 +21,7 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 ////////////////////////////// SYNTH
-#define SAMPLE_RATE 22050
+#define SAMPLE_RATE 44100
 #include "driver/i2s.h"
 #include "synthESP32LowPassFilter_E.h" // filter
 #include "tablesESP32_E.h"
@@ -47,6 +47,24 @@
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R3, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ 5, /* data=*/ 3);   // pin remapping with ESP8266 HW I2C
 
 const String trot[18] = { "WAV", "ENV", "LEN", "PIT", "MOD", "VOL", "PAN", "FIL", "BPM","MVO","TRP","MFI","OCT","PSN","GP1","GD1","GP2","GD2"};
+const String waveNames[16] = {
+  "SIN",  // 0 - Sine
+  "TRI",  // 1 - Triangle  
+  "SQR",  // 2 - Square
+  "SAW",  // 3 - Saw
+  "RMP",  // 4 - Ramp
+  "NS",   // 5 - Noise
+  "PHS",  // 6 - Phasor
+  "ADD",   // 14 - Additive (если добавили)
+  "SUB",  // 15 - Wave 7
+  "WN1",  // 7 - Wave 1
+  "WN2",  // 8 - Wave 2
+  "WN3",  // 9 - Wave 3
+  "WN4",  // 10 - Wave 4
+  "WN5",  // 11 - Wave 5
+  "WN6",  // 12 - Wave 6
+  "WN7"  // 13 - Wave 7  
+};
 const String tmodeZ[20] = { "Pad", "Sel", "Write", "Mute", "Solo", "Clear","LoadP","LoadS","LoaPS","SaveP","SaveS","SavPS","RndS","RndP","First","Last","Melod","RndNo","Piano","Song"};
 
 // modeZ types
@@ -117,9 +135,10 @@ const String tmodeZ[20] = { "Pad", "Sel", "Write", "Mute", "Solo", "Clear","Load
 // ENVELOPE1 1
 // ENVELOPE2 2
 // ENVELOPE3 3
+// ENVELOPE4 4
 
 
-#define SAMPLE_RATE 22050
+#define SAMPLE_RATE 44100
 
 // i2s
 
@@ -236,7 +255,7 @@ byte shiftR1=false;
 byte RV;
 
 // 8 sound parameters + bpm + master vol + transpose + master filter + octave + Pattern song selector +  4 Audino parameters
-const int max_values[18]={13,3,127,127,127,31, 99,127,400,31, 1,127,10,255,511,127,511,255}; 
+const int max_values[18]={15,4,127,127,127,31, 99,127,400,31, 1,127,10,255,511,127,511,255}; 
 const int min_values[18]={ 0,0,  0,  0,  0, 0,-99,  0,  0, 0,-1,  0, 0,  0,0,0,0,0};
 
 int ROTvalue[16][8]={ // init sound values
@@ -335,8 +354,8 @@ void setSound(byte f){
   synthESP32_setFilter(f,ROTvalue[f][7]);  
 }
 void setRandomVoice(byte f){
-  ROTvalue[f][0]=random(0, 14);
-  ROTvalue[f][1]=random(0, 4);
+  ROTvalue[f][0]=random(0, 16);
+  ROTvalue[f][1]=random(0, 5);
   ROTvalue[f][2]=random(1, 60);
   ROTvalue[f][3]=random(0, 127);
   ROTvalue[f][4]=random(10,100);
@@ -546,6 +565,37 @@ void save_sound(byte pat){
 
 }
 
+
+void startupAnimation() {
+  // Бегущая точка по всем LED
+  for (int i = 0; i < 32; i++) {
+    strip.setPixelColor(real_led[i], strip.Color(0, 100, 200)); // Синий
+    strip.show();
+    delay(20); // Быстрая анимация
+    strip.setPixelColor(real_led[i], strip.Color(0, 0, 0));
+  }
+  
+  // Мигание всех LED 3 раза
+  for (int j = 0; j < 3; j++) {
+    // Включить все
+    for (int i = 0; i < 32; i++) {
+      strip.setPixelColor(real_led[i], strip.Color(80, 80, 80)); // Белый
+    }
+    strip.show();
+    delay(80);
+    
+    // Выключить все
+    for (int i = 0; i < 32; i++) {
+      strip.setPixelColor(real_led[i], strip.Color(0, 0, 0));
+    }
+    strip.show();
+    if (j < 2) delay(80); // Не ждать после последнего мигания
+  }
+  
+  // Зажечь текущий выбранный звук
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -587,6 +637,8 @@ void setup() {
   strip.clear();           
   strip.show();            
   strip.setBrightness(50);
+  startupAnimation();
+    delay(100); // Пауза после анимации
   // Seq
 
 
@@ -654,7 +706,7 @@ void loop() {
   READ_KEYPAD(); 
   DO_KEYPAD();
   REFRESH_LEDS();
-  REFRESH_OLED();
+  REFRESH_OLED_OPTIMIZED();
   REFRESH_VUMETER();
 
 

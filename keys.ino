@@ -2,14 +2,13 @@ void READ_KEYPAD(){
   if (kpd.getKeys()) {
     for (int i=0; i<LIST_MAX; i++) {
       if ( kpd.key[i].stateChanged ) {
-        switch (kpd.key[i].kstate) {  // Report active key state : IDLE, PRESSED, HOLD, or RELEASED
-          case PRESSED:
-            trigger_on[kpd.key[i].kcode]=1;
-            break;
-          case HOLD:
-            break;
-          case RELEASED:
-            break;
+        // ДОБАВИТЬ ПРОВЕРКУ ВРЕМЕНИ:
+        static unsigned long lastPressTime = 0;
+        unsigned long now = millis();
+        
+        if (kpd.key[i].kstate == PRESSED && (now - lastPressTime > 30)) {
+          trigger_on[kpd.key[i].kcode]=1;
+          lastPressTime = now;
         }
       }
     }

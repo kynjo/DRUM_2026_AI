@@ -1,5 +1,4 @@
-
-void synthESP32_begin(){
+void  synthESP32_begin(){
 
   lpfL.setResonance(reso);
   lpfR.setResonance(reso);
@@ -103,7 +102,7 @@ static void write_buffer() {
 	
 	int32_t sound_A[16];
  
-	sound_A[0]=(((signed char)(wtables[wavs[0] ][((unsigned char *)&(PCW[0]  += FTW[0] ))[1]]) * AMP[0]   ) >> 8);
+  sound_A[0]=(((signed char)(wtables[wavs[0] ][((unsigned char *)&(PCW[0]  += FTW[0] ))[1]]) * AMP[0]   ) >> 8);
 	sound_A[1]=(((signed char)(wtables[wavs[1] ][((unsigned char *)&(PCW[1]  += FTW[1] ))[1]]) * AMP[1]   ) >> 8);
 	sound_A[2]=(((signed char)(wtables[wavs[2] ][((unsigned char *)&(PCW[2]  += FTW[2] ))[1]]) * AMP[2]   ) >> 8);
 	sound_A[3]=(((signed char)(wtables[wavs[3] ][((unsigned char *)&(PCW[3]  += FTW[3] ))[1]]) * AMP[3]   ) >> 8);
@@ -193,11 +192,31 @@ static void write_buffer() {
 	int16_t lsample_out=(lrefilter*mvol)>>5;
 	int16_t rsample_out=(rrefilter*mvol)>>5;	
   
-	if (lsample_out>250) lsample_out=250;
-	if (rsample_out>250) rsample_out=250;
+    // Простая мягкая сатурация (улучшает звук, убирает резкость)
+  lsample_out = lsample_out - (lsample_out*lsample_out*lsample_out)/(3*32768*32768);
+  rsample_out = rsample_out - (rsample_out*rsample_out*rsample_out)/(3*32768*32768);
+  
+  if (lsample_out > 240) lsample_out = 240 + (lsample_out-240)/3;
+  if (rsample_out > 240) rsample_out = 240 + (rsample_out-240)/3;
+  if (lsample_out < -240) lsample_out = -240 + (lsample_out+240)/3;
+  if (rsample_out < -240) rsample_out = -240 + (rsample_out+240)/3;
 
   out_buf[i*2]   = (uint16_t)lsample_out<<8;  
   out_buf[i*2+1] = (uint16_t)rsample_out<<8;
+
+/*// ДОБАВИТЬ ЗАПИСЬ В БУФЕР ВИЗУАЛИЗАЦИИ:
+  static byte sampleCounter = 0;
+  sampleCounter++;
+  if (sampleCounter >= 4) { // Децимация 4:1 (22050/4 = 5512 Гц)
+    sampleCounter = 0;
+    
+    // Среднее левого и правого каналов
+    int16_t avgSample = (lsample_out + rsample_out) / 2;
+    
+    // Записываем в буфер
+    waveBuffer[waveBufferIndex] = avgSample;
+    waveBufferIndex = (waveBufferIndex + 1) % WAVE_VIS_WIDTH;
+  }*/
   
 //  vmeter=lsample_out;
 
@@ -299,14 +318,15 @@ void synthESP32_setMVol(unsigned char vol) {
   mvol=vol;	
 }
 
+
 //*********************************************************************
 //  Setup master filter [0-255]
 //*********************************************************************
 
 void synthESP32_setMFilter(unsigned char freq)  {
   // ya que 0 es no filter hago un map y cambio el rango
-  freq=map(freq,0,127,255,0);
-  //freq=freq<<1; //multiplico por dos porque el valor viene de 0-127 y necesito 0-255
+  freq=map(freq,0,127,64,255);
+ // freq=freq<<1; //multiplico por dos porque el valor viene de 0-127 y necesito 0-255
   lpfL.setCutoffFreq(freq);
   lpfR.setCutoffFreq(freq);
 }  

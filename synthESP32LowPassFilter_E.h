@@ -62,7 +62,7 @@ public:
 	*/
 	void setResonance(uint8_t resonance)
 	{
-		q = resonance;
+		q = min(resonance, (uint8_t)200);
 	}
 
 	/** Calculate the next sample, given an input signal.

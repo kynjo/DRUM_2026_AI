@@ -1,6 +1,6 @@
 void IRAM_ATTR i_ENCODERS() {
-  bitWrite(ENC_PORT1,0,!digitalRead(pinR1A));
-  bitWrite(ENC_PORT1,1,!digitalRead(pinR1B));
+  bitWrite(ENC_PORT1,0,!digitalRead(pinR1B));
+  bitWrite(ENC_PORT1,1,!digitalRead(pinR1A));
   readencoders=true;
   READ_ENCODERS();
 }
@@ -51,7 +51,9 @@ void READ_ENCODERS(){
         melodic[selected_sound][f]=melodic[selected_sound][f]+transpose;
       }
     } else if (selected_rot==13){
-      pattern_song_counter=counter1;                 
+      pattern_song_counter=counter1; 
+         
+ 
     } else {
       ROTvalue[selected_sound][selected_rot]=counter1;
       setSound(selected_sound);
