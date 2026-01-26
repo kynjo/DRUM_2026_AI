@@ -5,6 +5,7 @@ void IRAM_ATTR i_ENCODERS() {
   READ_ENCODERS();
 }
 void READ_ENCODERS(){
+
   
   if (!readencoders) return;
   
@@ -22,15 +23,20 @@ void READ_ENCODERS(){
     transpose=0;
     counter1=transpose;
    } else if (selected_rot==13){
-    counter1=pattern_song_counter;               
-  } else {
+    counter1=pattern_song_counter;   
+  } else if (selected_rot==14){  // REV (новый параметр)
+    counter1=master_reverb;   } 
+
+  else {
     counter1=ROTvalue[selected_sound][selected_rot];
   }
   old_counter1=counter1;
 
   counter1=counter1+read_encoder1();
+   if (selected_rot < 16) {
   if (counter1>max_values[selected_rot]) counter1=max_values[selected_rot];
   if (counter1<min_values[selected_rot]) counter1=min_values[selected_rot];
+   }
   if (counter1!=old_counter1){
     
     if (selected_rot==11){
@@ -53,7 +59,12 @@ void READ_ENCODERS(){
     } else if (selected_rot==13){
       pattern_song_counter=counter1; 
          
- 
+    } else if (selected_rot==14){  // REV
+      master_reverb=counter1;
+      synthESP32_setMReverb(master_reverb);
+        Serial.print("Reverb set to: ");
+  Serial.println(master_reverb);
+     
     } else {
       ROTvalue[selected_sound][selected_rot]=counter1;
       setSound(selected_sound);
@@ -70,6 +81,7 @@ void READ_ENCODERS(){
     
     refreshOLED=true;
   }
+  
 }
 int16_t read_encoder1() {
   

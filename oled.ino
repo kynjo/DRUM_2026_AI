@@ -48,6 +48,11 @@ u8g2.setFont(u8g2_font_helvR08_tf);   // Чистый Helvetica 8px      // Ос
      u8g2.print(transpose);
    } else if (selected_rot==13){
      u8g2.print(pattern_song_counter);
+  //////////////
+  } else if (selected_rot==14) {  // НОВОЕ: реверб
+    u8g2.print(master_reverb);
+  ////////////////
+  
   } else if (selected_rot==0){
     // ОТОБРАЖАЕМ НАЗВАНИЕ ВОЛНЫ вместо номера
     byte waveIndex = ROTvalue[selected_sound][0];
@@ -57,6 +62,7 @@ u8g2.setFont(u8g2_font_helvR08_tf);   // Чистый Helvetica 8px      // Ос
   } else {
     u8g2.print(ROTvalue[selected_sound][selected_rot]);  
   }
+
 
   /*u8g2.setCursor(3,41); 
   if (selected_rot==11){

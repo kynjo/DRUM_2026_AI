@@ -22,9 +22,9 @@ void DO_KEYPAD(){
       //Serial.println(f);
       nkey=real_key[f];
       //// first 11 pad keys select rotary when shiftR1 is pressed
-      if (nkey<14 && shiftR1){
+      if (nkey<16 && shiftR1){
         selected_rot=nkey;
-        if (nkey==10) transpose=0;
+        if (nkey==15) transpose=0;
         refreshOLED=true;
       //// 16 pad keys
       } else if (nkey<16){

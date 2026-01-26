@@ -1,5 +1,8 @@
 void  synthESP32_begin(){
 
+ // Инициализация реверба (аналогично фильтрам)
+  masterReverb.setLevel(0);
+  
   lpfL.setResonance(reso);
   lpfR.setResonance(reso);
  
@@ -38,6 +41,7 @@ void  synthESP32_begin(){
   lpf13.setCutoffFreq(cutoff);
   lpf14.setCutoffFreq(cutoff);
   lpf15.setCutoffFreq(cutoff);
+
       
   i2s_config_t i2s_config = {
     .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX ),
@@ -140,6 +144,9 @@ static void write_buffer() {
   sound_A[14]=lpf14.next(sound_A[14])<<0;
   sound_A[15]=lpf15.next(sound_A[15])<<0;
 
+
+
+
   taskYIELD(); 
   
 	// L & R outputs
@@ -164,6 +171,9 @@ static void write_buffer() {
 	((sound_A[15]* VOL_L[15]  ) >> 3 ) 
     ) >> 3);
 
+
+
+
   //loutput += delay1.next(loutput)>>1;
 	
 	int32_t routput= 127 +
@@ -186,12 +196,21 @@ static void write_buffer() {
 	((sound_A[15]* VOL_R[15]  ) >> 3 ) 
     ) >> 3); 
   
+
 	uint8_t lrefilter=lpfL.next(loutput)<<0;
 	uint8_t rrefilter=lpfR.next(routput)<<0;
 	
+
 	int16_t lsample_out=(lrefilter*mvol)>>5;
-	int16_t rsample_out=(rrefilter*mvol)>>5;	
-  
+	int16_t rsample_out=(rrefilter*mvol)>>5;
+
+        // ============ APPLY REVERB (after master filter) ============
+      //if (master_reverb > 0) {
+  masterReverb.process(lsample_out, rsample_out);
+      //}
+  // ============================================================	
+
+
     // Простая мягкая сатурация (улучшает звук, убирает резкость)
   lsample_out = lsample_out - (lsample_out*lsample_out*lsample_out)/(3*32768*32768);
   rsample_out = rsample_out - (rsample_out*rsample_out*rsample_out)/(3*32768*32768);
@@ -199,26 +218,11 @@ static void write_buffer() {
   if (lsample_out > 240) lsample_out = 240 + (lsample_out-240)/3;
   if (rsample_out > 240) rsample_out = 240 + (rsample_out-240)/3;
   if (lsample_out < -240) lsample_out = -240 + (lsample_out+240)/3;
-  if (rsample_out < -240) rsample_out = -240 + (rsample_out+240)/3;
+  if (rsample_out < -240) rsample_out = -240 + (rsample_out+240)/3; 
 
   out_buf[i*2]   = (uint16_t)lsample_out<<8;  
   out_buf[i*2+1] = (uint16_t)rsample_out<<8;
 
-/*// ДОБАВИТЬ ЗАПИСЬ В БУФЕР ВИЗУАЛИЗАЦИИ:
-  static byte sampleCounter = 0;
-  sampleCounter++;
-  if (sampleCounter >= 4) { // Децимация 4:1 (22050/4 = 5512 Гц)
-    sampleCounter = 0;
-    
-    // Среднее левого и правого каналов
-    int16_t avgSample = (lsample_out + rsample_out) / 2;
-    
-    // Записываем в буфер
-    waveBuffer[waveBufferIndex] = avgSample;
-    waveBufferIndex = (waveBufferIndex + 1) % WAVE_VIS_WIDTH;
-  }*/
-  
-//  vmeter=lsample_out;
 
     //************************************************
     //  Modulation engine
@@ -319,18 +323,6 @@ void synthESP32_setMVol(unsigned char vol) {
 }
 
 
-//*********************************************************************
-//  Setup master filter [0-255]
-//*********************************************************************
-
-void synthESP32_setMFilter(unsigned char freq)  {
-  // ya que 0 es no filter hago un map y cambio el rango
-  freq=map(freq,0,127,64,255);
- // freq=freq<<1; //multiplico por dos porque el valor viene de 0-127 y necesito 0-255
-  lpfL.setCutoffFreq(freq);
-  lpfR.setCutoffFreq(freq);
-}  
-
   //*********************************************************************
 //  Setup voice filter [0-255]
 //*********************************************************************
@@ -424,10 +416,33 @@ void synthESP32_trigger(unsigned char voice)  {
   EPCW[voice]=0;
   FTW[voice]=PITCH[voice];
 }
-//*********************************************************************
+//********************************************************************03
+
 //  Set frequency direct
 //*********************************************************************
 
 void synthESP32_setFrequency(unsigned char voice,float f) {
   PITCH[voice]=f/(SAMPLE_RATE/65535.0);
+}
+
+//*********************************************************************
+//  Setup master filter [0-255]
+//*********************************************************************
+
+void synthESP32_setMFilter(unsigned char freq)  {
+  // ya que 0 es no filter hago un map y cambio el rango
+  freq=map(freq,0,127,192,0);
+ // freq=freq<<1; //multiplico por dos porque el valor viene de 0-127 y necesito 0-255
+  lpfL.setCutoffFreq(freq);
+  lpfR.setCutoffFreq(freq);
+}  
+
+//*********************************************************************
+//  Setup master reverb mix [0-127]
+//*********************************************************************
+
+void synthESP32_setMReverb(unsigned char level) {
+ master_reverb=level;
+// level=100;
+masterReverb.setLevel(level);
 }

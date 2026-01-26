@@ -25,6 +25,9 @@
 #include "driver/i2s.h"
 #include "synthESP32LowPassFilter_E.h" // filter
 #include "tablesESP32_E.h"
+//////////////////////////////REVERB
+#include "reverbESP32.h"
+//int master_reverb=0; 
 
 
 ////////////////////////////// LEDS
@@ -46,7 +49,7 @@
 ////////////////////////////// OLED
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R3, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ 5, /* data=*/ 3);   // pin remapping with ESP8266 HW I2C
 
-const String trot[18] = { "WAV", "ENV", "LEN", "PIT", "MOD", "VOL", "PAN", "FIL", "BPM","MVO","TRP","MFI","OCT","PSN","GP1","GD1","GP2","GD2"};
+const String trot[16] = { "WAV", "ENV", "LEN", "PIT", "MOD", "VOL", "PAN", "FIL", "BPM","MVO","TRP","MFI","OCT","PSN","DLY"};
 const String waveNames[16] = {
   "SIN",  // 0 - Sine
   "TRI",  // 1 - Triangle  
@@ -151,9 +154,13 @@ const String tmodeZ[20] = { "Pad", "Sel", "Write", "Mute", "Solo", "Clear","Load
 
 static uint16_t out_buf[DMA_BUF_LEN * 2];
 
+
+
 // Filters master (L&R) and 16 sounds
 LowPassFilter lpfR;
 LowPassFilter lpfL;
+
+SimpleReverb masterReverb;
 
 LowPassFilter lpf0;
 LowPassFilter lpf1;
@@ -172,6 +179,9 @@ LowPassFilter lpf13;
 LowPassFilter lpf14;
 LowPassFilter lpf15;
 
+
+
+const int revlevel=200;
 const int cutoff=255;
 const int reso=511;
 
@@ -197,7 +207,10 @@ static unsigned int divider = 16;                             //-Sample rate dec
 static int mvol=10;
 int master_vol=17;
 int master_filter=0;
+int master_reverb=0;
 int octave=5;
+
+
 
 ////////////////////////////// LEDS
 #define LED_PIN    39
@@ -255,8 +268,8 @@ byte shiftR1=false;
 byte RV;
 
 // 8 sound parameters + bpm + master vol + transpose + master filter + octave + Pattern song selector +  4 Audino parameters
-const int max_values[18]={15,4,127,127,127,31, 99,127,400,31, 1,127,10,255,511,127,511,255}; 
-const int min_values[18]={ 0,0,  0,  0,  0, 0,-99,  0,  0, 0,-1,  0, 0,  0,0,0,0,0};
+const int max_values[16]={15,4,127,127,127,31, 99,127,400,31, 1,127,10,255,255}; 
+const int min_values[16]={ 0,0,  0,  0,  0, 0,-99,  0,  0, 0,-1,  0, 0,  0,  1};
 
 int ROTvalue[16][8]={ // init sound values
   { 0,2, 32, 35,29,7,-31,0}, // THIS IS VOICE #0
@@ -351,7 +364,11 @@ void setSound(byte f){
   synthESP32_setMod(f,ROTvalue[f][4]); 
   synthESP32_setVol(f,ROTvalue[f][5]);  
   synthESP32_setPan(f,ROTvalue[f][6]);  
-  synthESP32_setFilter(f,ROTvalue[f][7]);  
+  synthESP32_setFilter(f,ROTvalue[f][7]); 
+  //////
+
+
+
 }
 void setRandomVoice(byte f){
   ROTvalue[f][0]=random(0, 16);
@@ -623,8 +640,8 @@ void setup() {
   synthESP32_setMVol(master_vol);
   // Set master filter
   synthESP32_setMFilter(master_filter);  
-
-
+    // Set master reverb (ДОБАВЬТЕ)
+  synthESP32_setMReverb(master_reverb);
   
   // SPIFFS
   if (!SPIFFS.begin(true)) {
