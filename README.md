@@ -12,6 +12,9 @@ This is my DRUM SYNTH LOFI MACHINE.
 - 16 sound polyphony
 - Sound parameters: Table, Length, Envelope, Pitch, Modulation, + Volume, Pan and Filter.
 - Filter (LowPassFilter) comes from [Mozzi Library](https://github.com/sensorium/Mozzi)
+- Master delay (on 14 button).
+- Wavetable's name on screen.
+- BPM on main screen.
 
 SEQUENCER:
 
@@ -45,8 +48,6 @@ Necessary Libraries:
 - Button input - [Keypad](https://github.com/Chris--A/Keypad)
 
 # Notes:
-
-Schematics uploaded.
 
 STL 3D model uploaded.
 
