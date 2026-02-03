@@ -1,4 +1,6 @@
-# DRUM_2024_V1
+# DRUM_2024_AI
+
+All the changes were added using AI
 
 ESP32 DRUM SYNTH MACHINE
 
