@@ -2,9 +2,10 @@
 
 ESP32 DRUM SYNTH MACHINE
 
-This is my DRUM SYNTH LOFI MACHINE.
+DRUM SYNTH LOFI MACHINE.
 
-![IMG_20240406_150440](https://github.com/zircothc/DRUM_2004_V1/assets/17828930/c8327dc2-a3f7-4d81-8d82-ebfe2a7c45c3)
+![2026-02-03 22-22-08](https://github.com/user-attachments/assets/58913a9b-42ed-4cb6-b255-0ffcb2dc6695)
+
 
 # Synth engine:
 
@@ -71,8 +72,6 @@ Video demo of the prototype:
 
 [![IMG_20240406_150231](https://img.youtube.com/vi/rXl1gpWJp-g/0.jpg)](https://www.youtube.com/watch?v=rXl1gpWJp-g)
 
-Prototype:
-![IMG_20240406_150231](https://github.com/zircothc/DRUM_2004_V1/assets/17828930/feb9b928-f76a-4b51-93ea-a7afbd6a5c28)
 
 # PCB, PROJECT & FINAL LOOK:
 
@@ -80,21 +79,8 @@ https://oshwlab.com/zircothc/esp32-drum-synth-lofi-machine
 
 https://easyeda.com/editor#project_id=08f629c08b18444ca16accbb2242c0fb
 
-PCB
-![pcb por ambas partes](https://github.com/zircothc/DRUM_2004_V1/assets/17828930/b96a9900-0efa-4e17-8604-94ad5a8391e3)
+![2026-02-03 22-22-23](https://github.com/user-attachments/assets/9173a16f-6bcb-432d-ac45-3aedb6622e3d)
 
-PARTS MOUNTED
-![soldado](https://github.com/zircothc/DRUM_2004_V1/assets/17828930/691a3e87-74a0-4ee9-bb83-77bda648d8eb)
-![soldado por detras](https://github.com/zircothc/DRUM_2004_V1/assets/17828930/2e9d8d91-a247-4251-9387-837ad2b6a9ef)
+![2026-02-03 22-22-41](https://github.com/user-attachments/assets/5598e8c7-5ca9-42a5-a6b4-0a3d87faff44)
 
-SIZE: FINAL BUILD vs PROTOTYPE
-![SIZE](https://github.com/zircothc/DRUM_2004_V1/assets/17828930/9eb3fe80-272a-4285-b9d5-6d1e910351dc)
-
-TWO MACHINES IN SYNC
-![sync](https://github.com/zircothc/DRUM_2004_V1/assets/17828930/0adc1eed-482d-4931-8327-f6911d9ab73b)
-
-ALTERNATIVE CASE/ENCLOSURE
-
-![IMG_20250602_214025](https://github.com/user-attachments/assets/21715a8f-d8d2-47fd-ac88-73c617269332)
-![IMG_20250602_214653](https://github.com/user-attachments/assets/dbacb54e-8215-4e22-88d9-833ccd012ed1)
 
