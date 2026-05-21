@@ -55,7 +55,27 @@ void REFRESH_OLED_OPTIMIZED() {
   } else {
     u8g2.print(ROTvalue[selected_sound][selected_rot]);  
   }
-   
+
+
+  /*u8g2.setCursor(3,41); 
+  if (selected_rot==11){
+     u8g2.print(master_filter); 
+  } else if (selected_rot==12){
+    u8g2.print(octave);      
+  } else if (selected_rot==8){
+    u8g2.print(bpm);
+  } else if (selected_rot==9){
+     u8g2.print(master_vol);
+  } else if (selected_rot==10){
+     u8g2.print(transpose);
+   } else if (selected_rot==13){
+     u8g2.print(pattern_song_counter);
+  } else {
+    u8g2.print(ROTvalue[selected_sound][selected_rot]);  
+  }*/
+      
+
+
   u8g2.drawHLine(0,42,31);
 
   u8g2.setCursor(2,53);
@@ -85,4 +105,50 @@ void REFRESH_OLED_OPTIMIZED() {
   
   u8g2.drawFrame(0,0,31,71);
 
-  u8g2.sendBuffer();
+  u8g2.sendBuffer();  
+
+  /*// Добавить в конец файла перед последней }:
+
+void drawWaveform(byte x, byte y, byte width, byte height) {
+  if (!showWaveform) return;
+  
+  // Очищаем область под волну
+  u8g2.setDrawColor(0);
+  u8g2.drawBox(x, y, width, height);
+  u8g2.setDrawColor(1);
+  
+  // Центральная линия
+  byte centerY = y + height/2;
+  u8g2.drawHLine(x, centerY, width);
+  
+  // Рисуем волну
+  byte prevX = x;
+  byte prevY = centerY;
+  
+  for (byte i = 0; i < width; i++) {
+    // Вычисляем индекс в буфере (с учетом смещения)
+    byte bufferIdx = (waveBufferIndex + i) % WAVE_VIS_WIDTH;
+    
+    // Нормализуем значение от -127..127 к 0..height-1
+    int16_t sample = waveBuffer[bufferIdx];
+    byte pixelY = centerY - map(sample, -250, 250, -height/2, height/2);
+    
+    // Ограничиваем по высоте
+    if (pixelY < y) pixelY = y;
+    if (pixelY >= y + height) pixelY = y + height - 1;
+    
+    // Ставим точку
+    u8g2.drawPixel(x + i, pixelY);
+    
+    // Соединяем линией с предыдущей точкой для гладкости
+    if (i > 0) {
+      u8g2.drawLine(prevX, prevY, x + i, pixelY);
+    }
+    
+    prevX = x + i;
+    prevY = pixelY;
+  }
+  
+  // Рамка вокруг
+  u8g2.drawFrame(x, y, width, height);*/
+}
