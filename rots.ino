@@ -27,6 +27,8 @@ void READ_ENCODERS(){
   } else if (selected_rot==14){  // REV (новый параметр)
     counter1=master_reverb;   } 
 
+
+
   else {
     counter1=ROTvalue[selected_sound][selected_rot];
   }

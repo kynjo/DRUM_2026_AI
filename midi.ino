@@ -1,28 +1,107 @@
-void handleNoteOn(byte channel, byte pitch, byte velocity){
-  synthESP32_mTrigger(channel,pitch);
-  if (recording && playing){
-    bitWrite(pattern[channel],sstep,1);
-    melodic[channel][sstep]=pitch;    
+// ================================================================
+//  MIDI handlers
+// ================================================================
+
+// ---- Note On ----
+void handleNoteOn(byte channel, byte pitch, byte velocity) {
+  if (velocity == 0) { handleNoteOff(channel, pitch, velocity); return; }
+
+  int voice;
+  if (pitch >= 36 && pitch <= 51) {
+    voice = pitch - 36;       // GM Drums: нота 36-51 → голос 0-15
+  } else {
+    voice = pitch % 16;
   }
-  Serial.print(channel);
-  Serial.print(" ");
-  Serial.println(pitch);
+  synthESP32_mTrigger(voice, pitch);
+
+  if (recording && playing) {
+    bitWrite(pattern[voice], sstep, 1);
+    melodic[voice][sstep] = pitch;
+  }
 }
-void handleCC(byte channel, byte ccnumber, byte value){
-  int nvalue=value;
-  // arreglar pan
-  if (ccnumber==6) {
-    nvalue=map(nvalue,0,127,-99,99);
+
+// ---- Note Off ----
+void handleNoteOff(byte channel, byte pitch, byte velocity) {
+  // Драм-машина: короткие звуки, NoteOff игнорируется
+}
+
+// ---- Control Change ----
+void handleCC(byte channel, byte ccnumber, byte value) {
+  if (ccnumber >= 8) return;
+
+  int voice  = constrain(channel - 1, 0, 15);
+  int nvalue = (ccnumber == 6)
+               ? map(value, 0, 127, -99, 99)
+               : (int)value;
+
+  if (nvalue > max_values[ccnumber]) return;
+  if (nvalue < min_values[ccnumber]) return;
+
+  ROTvalue[voice][ccnumber] = nvalue;
+  setSound(voice);
+  refreshOLED = true;
+}
+
+// ================================================================
+//  Transport + Clock
+// ================================================================
+
+volatile bool externalClock = false;
+
+// ---- MIDI Clock (24 тика/четверть) ----
+void handleClock() {
+  if (externalClock) uClock.clockMe();
+}
+
+// ---- Start (0xFA) ----
+void handleStart() {
+  externalClock = true;
+  uClock.setMode(uClock.EXTERNAL_CLOCK);
+  sstep     = firstStep;
+  playing   = true;
+  recording = false;
+  uClock.start();
+  refreshSTEP   = true;
+  refreshMODES  = true;
+}
+
+// ---- Continue (0xFB) — при зацикливании паттерна ----
+void handleContinue() {
+  externalClock = true;
+  uClock.setMode(uClock.EXTERNAL_CLOCK);
+  playing = true;
+  uClock.start();
+  refreshSTEP  = true;
+  refreshMODES = true;
+}
+
+// ---- Stop (0xFC) ----
+void handleStop() {
+  // 1. Сначала остановить тактирование
+  externalClock = false;
+  uClock.stop();
+  uClock.setMode(uClock.INTERNAL_CLOCK);
+
+  // 2. Сбросить флаги
+  playing   = false;
+  recording = false;
+  sstep     = firstStep;
+
+  // 3. Заглушить все голоса — ПРАВИЛЬНЫЙ способ:
+  //    EPCW = 0x8000 → огибающая уже "за концом" → AMP становится 0
+  //    НЕ вызываем synthESP32_mTrigger(v,0) — это рестарт, не стоп!
+  for (byte v = 0; v < 16; v++) {
+    EPCW[v] = 0x8000;
   }
-  // despreciar maximos y mínimos
-  if (nvalue>max_values[ccnumber]) return;
-  if (nvalue<min_values[ccnumber]) return;  
-  ROTvalue[channel][ccnumber]=nvalue;
-  setSound(channel);
-  Serial.print(channel);
-  Serial.print(" ");
-  Serial.print(ccnumber);
-  Serial.print(" ");
-  Serial.println(nvalue);
-  refreshOLED=true;
+
+  refreshSTEP  = true;
+  refreshMODES = true;
+}
+
+// ---- Song Position Pointer (0xF2) ----
+void handleSongPosition(unsigned int beats) {
+  byte loopLen = (lastStep - firstStep + 1);
+  byte newStep = firstStep + (beats % loopLen);
+  sstep        = constrain(newStep, firstStep, lastStep);
+  refreshSTEP  = true;
 }

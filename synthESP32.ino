@@ -9,38 +9,10 @@ void  synthESP32_begin(){
   lpfL.setCutoffFreq(cutoff);
   lpfR.setCutoffFreq(cutoff); 
   
-  lpf0.setResonance(reso);
-  lpf1.setResonance(reso);
-  lpf2.setResonance(reso);
-  lpf3.setResonance(reso);
-  lpf4.setResonance(reso);
-  lpf5.setResonance(reso);
-  lpf6.setResonance(reso);
-  lpf7.setResonance(reso);
-  lpf8.setResonance(reso);
-  lpf9.setResonance(reso);
-  lpf10.setResonance(reso);
-  lpf11.setResonance(reso);
-  lpf12.setResonance(reso);
-  lpf13.setResonance(reso);
-  lpf14.setResonance(reso);
-  lpf15.setResonance(reso);
-  lpf0.setCutoffFreq(cutoff);
-  lpf1.setCutoffFreq(cutoff);
-  lpf2.setCutoffFreq(cutoff);
-  lpf3.setCutoffFreq(cutoff);
-  lpf4.setCutoffFreq(cutoff);
-  lpf5.setCutoffFreq(cutoff);
-  lpf6.setCutoffFreq(cutoff);
-  lpf7.setCutoffFreq(cutoff);
-  lpf8.setCutoffFreq(cutoff);
-  lpf9.setCutoffFreq(cutoff);
-  lpf10.setCutoffFreq(cutoff);
-  lpf11.setCutoffFreq(cutoff);
-  lpf12.setCutoffFreq(cutoff);
-  lpf13.setCutoffFreq(cutoff);
-  lpf14.setCutoffFreq(cutoff);
-  lpf15.setCutoffFreq(cutoff);
+  for (int i = 0; i < 16; i++) {
+    lpf[i].setResonance(reso);
+    lpf[i].setCutoffFreq(cutoff);
+  }
 
       
   i2s_config_t i2s_config = {
@@ -49,7 +21,6 @@ void  synthESP32_begin(){
     .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
     .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
     .communication_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
-    //.communication_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_LSB),
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
     .dma_buf_count = DMA_NUM_BUF,
     .dma_buf_len = DMA_BUF_LEN,
@@ -104,7 +75,8 @@ static void write_buffer() {
 
 	// Generate sounds
 	
-	int32_t sound_A[16];
+  // static: не выделяется на стеке 32 раза за вызов write_buffer()
+  static int32_t sound_A[16];
  
   sound_A[0]=(((signed char)(wtables[wavs[0] ][((unsigned char *)&(PCW[0]  += FTW[0] ))[1]]) * AMP[0]   ) >> 8);
 	sound_A[1]=(((signed char)(wtables[wavs[1] ][((unsigned char *)&(PCW[1]  += FTW[1] ))[1]]) * AMP[1]   ) >> 8);
@@ -127,22 +99,9 @@ static void write_buffer() {
   //taskYIELD(); 
   
   // tracks filter
-  sound_A[0]=lpf0.next(sound_A[0])<<0;
-  sound_A[1]=lpf1.next(sound_A[1])<<0;
-  sound_A[2]=lpf2.next(sound_A[2])<<0;
-  sound_A[3]=lpf3.next(sound_A[3])<<0;
-  sound_A[4]=lpf4.next(sound_A[4])<<0;
-  sound_A[5]=lpf5.next(sound_A[5])<<0;
-  sound_A[6]=lpf6.next(sound_A[6])<<0;
-  sound_A[7]=lpf7.next(sound_A[7])<<0;
-  sound_A[8]=lpf8.next(sound_A[8])<<0;
-  sound_A[9]=lpf9.next(sound_A[9])<<0;
-  sound_A[10]=lpf10.next(sound_A[10])<<0;
-  sound_A[11]=lpf11.next(sound_A[11])<<0;
-  sound_A[12]=lpf12.next(sound_A[12])<<0;
-  sound_A[13]=lpf13.next(sound_A[13])<<0;
-  sound_A[14]=lpf14.next(sound_A[14])<<0;
-  sound_A[15]=lpf15.next(sound_A[15])<<0;
+  for (int i = 0; i < 16; i++) {
+    sound_A[i] = lpf[i].next(sound_A[i]);
+  }
 
 
 
@@ -210,6 +169,15 @@ static void write_buffer() {
       //}
   // ============================================================	
 
+/////////////////////RETRIGGER////////////
+// Apply retrigger to each voice
+/*
+  if (master_retrigger > 0) {
+    for (int v = 0; v < 16; v++) {
+      masterRetrigger.processVoice(v, sound_A[v]);
+    }
+  }
+  */
 
     // Простая мягкая сатурация (улучшает звук, убирает резкость)
   lsample_out = lsample_out - (lsample_out*lsample_out*lsample_out)/(3*32768*32768);
@@ -327,63 +295,10 @@ void synthESP32_setMVol(unsigned char vol) {
 //  Setup voice filter [0-255]
 //*********************************************************************
 
-void synthESP32_setFilter(unsigned char voice, unsigned char freq)  {
-  // ya que 0 es no filter hago un map y cambio el rango
-  freq=map(freq,0,127,255,0);
-  
-  //freq=freq<<1; //multiplico por dos porque el valor viene de 0-127 y necesito 0-255
-  
-  switch (voice) {
-    case 0:
-      lpf0.setCutoffFreq(freq);
-      break;
-    case 1:
-      lpf1.setCutoffFreq(freq);
-      break;
-    case 2:
-      lpf2.setCutoffFreq(freq);
-      break;
-    case 3:
-      lpf3.setCutoffFreq(freq);
-      break;
-    case 4:
-      lpf4.setCutoffFreq(freq);
-      break;
-    case 5:
-      lpf5.setCutoffFreq(freq);
-      break;
-    case 6:
-      lpf6.setCutoffFreq(freq);
-      break;
-    case 7:
-      lpf7.setCutoffFreq(freq);
-      break;
-    case 8:
-      lpf8.setCutoffFreq(freq);
-      break;
-    case 9:
-      lpf9.setCutoffFreq(freq);
-      break;
-    case 10:
-      lpf10.setCutoffFreq(freq);
-      break;
-    case 11:
-      lpf11.setCutoffFreq(freq);
-      break;
-    case 12:
-      lpf12.setCutoffFreq(freq);
-      break;
-    case 13:
-      lpf13.setCutoffFreq(freq);
-      break;
-    case 14:
-      lpf14.setCutoffFreq(freq);
-      break;
-    case 15:
-      lpf15.setCutoffFreq(freq);
-      break;
-  }
-} 
+void synthESP32_setFilter(unsigned char voice, unsigned char freq) {
+  freq = map(freq, 0, 127, 255, 0);
+  if (voice < 16) lpf[voice].setCutoffFreq(freq);
+}
   
 //*********************************************************************
 //  Setup pan [-99% - 99%]
@@ -415,6 +330,8 @@ void synthESP32_mTrigger(unsigned char voice,unsigned char MIDInote ) {
 void synthESP32_trigger(unsigned char voice)  {
   EPCW[voice]=0;
   FTW[voice]=PITCH[voice];
+   // Запускаем retrigger для этого голоса
+  //masterRetrigger.triggerVoice(voice);
 }
 //********************************************************************03
 
@@ -438,7 +355,7 @@ void synthESP32_setMFilter(unsigned char freq)  {
 }  
 
 //*********************************************************************
-//  Setup master reverb mix [0-127]
+//  Setup master delay mix [0-127]
 //*********************************************************************
 
 void synthESP32_setMReverb(unsigned char level) {
@@ -446,3 +363,30 @@ void synthESP32_setMReverb(unsigned char level) {
 // level=100;
 masterReverb.setLevel(level);
 }
+/*
+///////////////////////////////RETRIGGER///////////////////////////////////////
+//*********************************************************************
+//  Setup master retrigger [0-255]
+//*********************************************************************
+
+void synthESP32_setRetrigger(uint8_t level) {
+  master_retrigger = level;
+  masterRetrigger.setLevel(level);
+}
+
+//*********************************************************************
+//  Setup retrigger duration [5-200ms]
+//*********************************************************************
+
+void synthESP32_setRetriggerDuration(uint8_t durationMs) {
+  masterRetrigger.setDuration(durationMs);
+}
+
+//*********************************************************************
+//  Setup retrigger repeats [0-16]
+//*********************************************************************
+
+void synthESP32_setRetriggerRepeats(uint8_t repeats) {
+  masterRetrigger.setRepeats(repeats);
+}
+*/
