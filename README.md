@@ -13,6 +13,7 @@ DRUM SYNTH LOFI MACHINE.
 
 - Wavetable synthesizer based on DZL Arduino library ["The Synth"](https://github.com/dzlonline/the_synth)
 - 16 sound polyphony
+- MIDI support
 - Sound parameters: Table, Length, Envelope, Pitch, Modulation, + Volume, Pan and Filter.
 - Filter (LowPassFilter) comes from [Mozzi Library](https://github.com/sensorium/Mozzi)
 - Master delay (on 14 button).
@@ -36,10 +37,12 @@ SEQUENCER:
 
 IDE:
 Arduino `1.8.19` 
-Arduino `2.3.2`
+Arduino `2.3.8`
 
 Boards:
-Expressif Systems `2.0.16` (Tested fine up to `2.0.17`)
+Expressif Systems `2.0.17`
+
+Adafruit TinyUSB `2.4.0`
 
 Board: Lolin S2 Mini
 
